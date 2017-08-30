@@ -11,6 +11,11 @@
 |
 */
 
+use App\Http\Controllers\QueueController;
+
 $app->get('/', function () use ($app) {
     return $app->version();
 });
+
+$app->get('/ingest', 'QueueController@store');
+$app->post('/ingest', 'QueueController@store');
