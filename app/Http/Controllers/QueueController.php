@@ -81,6 +81,8 @@ class QueueController extends Controller {
 
             }
 
+
+            //TODO: Bar isnt the only item which could have been in the request. We need to remove any empty replace value
             //Remove {bar} if it doesnt exist in array keys
             if (strpos($newItem['location'], '{bar}') > -1){
                 $newItem['location'] = preg_replace("/\{bar\}/",'', $newItem['location']);
