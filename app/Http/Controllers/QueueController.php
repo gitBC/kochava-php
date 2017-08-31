@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 
 
 use App\Jobs\QueueJob;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\Rule;
+use function PHPSTORM_META\type;
 
 class QueueController extends Controller {
 
@@ -24,7 +27,9 @@ class QueueController extends Controller {
     public function store(Request $request){
 
 
-
+        /*
+         * Validate the request
+         */
         $this->validate($request, [
             'endpoint' => 'required',
             'endpoint.method' => ['required', Rule::in('GET', 'POST')],
@@ -35,16 +40,61 @@ class QueueController extends Controller {
 
         ]);
 
-        return dd($request->only(['endpoint', 'data']));
+        /*
+         * Store relevant parts of the request
+         */
+        $r = $request->only('data', 'endpoint');
 
-/*
-        $this->validate($request->
-        only('endpoint', 'data'), [
-           'endpoint' =>
-        ]);*/
+        /*
+         * Create response array to return added items
+         */
+        $added = [];
 
-        dd($request);
-//        $this->dispatch(new QueueJob($data));
+        /*
+         * loop over our data object
+         */
+        foreach ( $r['data'] as $item){
+
+            //Store time to build key
+            $time = Carbon::now();
+
+            /*
+             * Make Item array to manipulate and add to result array
+             */
+            $newItem = [
+                'method' => $r['endpoint']['method'],
+                'location' => $r['endpoint']['url']
+            ];
+
+            /*
+             * Loop over the data keys to build callback url
+             *
+             * We will add any additional subkeys or subIDs to the end of the request URL for customer data tracking
+             */
+            foreach ($item as $key => $value){
+
+                if (strpos($newItem['location'], '{'.$key.'}') > -1){
+                    $newItem['location'] = str_replace('{'.$key.'}', urlencode($value), $newItem['location']);
+                } else {
+                    $newItem['location'] .= '&'. urlencode($key) .'='. urlencode($value);
+                }
+
+            }
+
+            //Remove {bar} if it doesnt exist in array keys
+            if (strpos($newItem['location'], '{bar}') > -1){
+                $newItem['location'] = preg_replace("/\{bar\}/",'', $newItem['location']);
+            }
+
+                Redis::set($time->timestamp . $time->micro, json_encode($newItem));
+                array_push($added,$newItem );
+        }
+
+
+        /*
+         * Send back the results we added to redis
+         */
+        return json_encode($added);
     }
 
 }
