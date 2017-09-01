@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 
 use App\DeliveryLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DeliveryLogController extends Controller
@@ -29,8 +30,13 @@ class DeliveryLogController extends Controller
 
         $record->delivery_attempts = $request->input('delivery_attempts');
         $record->response_body = $request->input('response_body');
-        $record->response_time_nanoseconds = $request->input('response_time');
+        $record->response_time_microseconds = $request->input('response_time');
         $record->response_code = $request->input('response_code');
+
+
+        $initial_time = Carbon::createFromTimestamp($record->created_at)->micro;
+        $record->delivery_time_microseconds =  Carbon::now()->micro - $initial_time;
+
         $record->save();
     }
 }
