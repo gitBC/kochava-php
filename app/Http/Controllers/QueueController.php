@@ -89,14 +89,17 @@ class QueueController extends Controller {
                 $newItem['location'] = preg_replace("/\{bar\}/",'', $newItem['location']);
             }
 
-                Redis::set($time->timestamp . $time->micro, json_encode($newItem));
-                array_push($added,$newItem );
 
-                DeliveryLog::create([
-                    'original_redis_key'=> '$time->timestamp . $time->micro',
-                    'delivery_method'=> $newItem['method'],
-                    'delivery_location'=> $newItem['location']
-                ]);
+            //Push an Item onto Redis, delivery_logs table, and built up response
+            Redis::set($time->timestamp . $time->micro, json_encode($newItem));
+            array_push($added,$newItem );
+
+            DeliveryLog::create([
+                'original_redis_key'=> $time->timestamp . $time->micro,
+                'delivery_method'=> $newItem['method'],
+                'delivery_location'=> $newItem['location']
+            ]);
+
         }
 
 
