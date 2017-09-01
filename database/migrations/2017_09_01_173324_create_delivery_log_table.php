@@ -13,7 +13,7 @@ class CreateDeliveryLogTable extends Migration
      */
     public function up()
     {
-        Schema::create('delivery_log', function (Blueprint $table) {
+        Schema::create('delivery_logs', function (Blueprint $table) {
             $table->increments('id');
             $table->string('original_redis_key');
             $table->string('delivery_method');
@@ -33,6 +33,6 @@ class CreateDeliveryLogTable extends Migration
      */
     public function down()
     {
-        Schema::drop('delivery_log');
+        Schema::drop('delivery_logs');
     }
 }

@@ -4,6 +4,7 @@
 namespace App\Http\Controllers;
 
 
+use App\DeliveryLog;
 use App\Jobs\QueueJob;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -90,6 +91,12 @@ class QueueController extends Controller {
 
                 Redis::set($time->timestamp . $time->micro, json_encode($newItem));
                 array_push($added,$newItem );
+
+                DeliveryLog::create([
+                    'original_redis_key'=> '$time->timestamp . $time->micro',
+                    'delivery_method'=> $newItem['method'],
+                    'delivery_location'=> $newItem['location']
+                ]);
         }
 
 
