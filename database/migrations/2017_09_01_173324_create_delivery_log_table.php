@@ -22,6 +22,7 @@ class CreateDeliveryLogTable extends Migration
             $table->integer('delivery_time_seconds');
             $table->text('response_body');
             $table->smallInteger('response_code');
+            $table->Integer('response_time_seconds');
             $table->timestamps();
         });
     }
