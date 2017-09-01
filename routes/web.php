@@ -19,3 +19,6 @@ $app->get('/', function () use ($app) {
 
 $app->get('/ingest', 'QueueController@store');
 $app->post('/ingest', 'QueueController@store');
+
+
+$app->post('/digest', "DeliveryLogController@store");
