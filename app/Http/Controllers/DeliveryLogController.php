@@ -26,16 +26,20 @@ class DeliveryLogController extends Controller
      */
     public function store(Request $request) {
 
-        $record = DeliveryLog::where('original_redis_key', $request->input('original_redis_key'))->first();
+        $record = DeliveryLog::where('original_redis_key', $request->input('original_redis_key'))->firstOrFail();
 
         $record->delivery_attempts = $request->input('delivery_attempts');
-        $record->response_body = $request->input('response_body');
+        $record->response_body = utf8_decode($request->input('response_body'));
         $record->response_time_microseconds = $request->input('response_time');
         $record->response_code = $request->input('response_code');
 
 
-        $initial_time = Carbon::createFromTimestamp($record->created_at)->micro;
-        $record->delivery_time_microseconds =  Carbon::now()->micro - $initial_time;
+        $initial_time = $record->original_redis_key;
+
+        $time = Carbon::now();
+        $record->delivery_time_microseconds =  ($time->timestamp  . $time->micro) - $initial_time;
+
+        \Log::debug("Time to deliver = " . $record->delivery_time_microseconds / 1000 / 1000 . " seconds");
 
         $record->save();
     }
