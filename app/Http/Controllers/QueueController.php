@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\Rule;
+use Log;
 use function PHPSTORM_META\type;
 
 class QueueController extends Controller {
@@ -26,6 +27,10 @@ class QueueController extends Controller {
      * @param Request $request
      */
     public function store(Request $request){
+
+        if (getenv("APP_DEBUG")) {
+            Log::debug("************************* New Request to deliver *************************\n" . $request);
+        }
 
 
         /*
@@ -56,6 +61,10 @@ class QueueController extends Controller {
          */
         foreach ( $r['data'] as $item){
 
+            if (getenv("APP_DEBUG")) {
+                Log::debug("************************* Prepping New Item for Queue *************************\n" . print_r($item, true));
+            }
+
             //Store time to build key
             $time = Carbon::now();
 
@@ -75,8 +84,19 @@ class QueueController extends Controller {
             foreach ($item as $key => $value){
 
                 if (strpos($newItem['location'], '{'.$key.'}') > -1){
+                    if (getenv("APP_DEBUG")) {
+                        Log::debug("************************* Replacing An Item Value in Queue *************************\n"
+                        . "Replacing {" . $key . "} with " .$value );
+                    }
                     $newItem['location'] = str_replace('{'.$key.'}', urlencode($value), $newItem['location']);
                 } else {
+
+                    if (getenv("APP_DEBUG")) {
+
+                        Log::debug("************************* Adding SubKey in Queue *************************\n"
+                            . "Adding " . $key . "=" .$value );
+                    }
+
                     $newItem['location'] .= '&'. urlencode($key) .'='. urlencode($value);
                 }
 
@@ -90,15 +110,23 @@ class QueueController extends Controller {
             }
 
 
+
+            Log::debug("************************* Adding New Item to Queue *************************\n"
+                . print_r($newItem, true));
             //Push an Item onto Redis, delivery_logs table, and built up response
             Redis::set($time->timestamp . $time->micro, json_encode($newItem));
             array_push($added,$newItem );
 
-            DeliveryLog::create([
+
+
+            $logItem = DeliveryLog::create([
                 'original_redis_key'=> $time->timestamp . $time->micro,
                 'delivery_method'=> $newItem['method'],
                 'delivery_location'=> $newItem['location']
             ]);
+
+            Log::debug("************************* Adding Delivery Log Item*************************\n"
+                . print_r($logItem->getAttributes(), true) );
 
         }
 
