@@ -37,7 +37,7 @@ class DeliveryLogController extends Controller
         $initial_time = $record->original_redis_key;
 
         $time = number_format ( microtime(true),  $decimals = 14, $dec_point = ".", $thousands_sep = "" );
-        $record->deliverytime_microseconds =  ($time) - $initial_time;
+        $record->deliverytime_microseconds =  floatval($time) - floatval($initial_time);
 
         \Log::debug("Time to deliver = " . $record->delivery_time_microseconds / 1000 / 1000 . " seconds");
 
