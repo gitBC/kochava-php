@@ -10,7 +10,8 @@
         "vlucas/phpdotenv": "~2.2",
         "doctrine/dbal": "^2.5",
         "predis/predis": "^1.1",
-        "illuminate/redis": "^5.4"
+        "illuminate/redis": "^5.4",
+        "vluzrmos/tinker": "^1.3"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
