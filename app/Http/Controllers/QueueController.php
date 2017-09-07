@@ -66,7 +66,7 @@ class QueueController extends Controller {
             }
 
             //Store time to build key
-            $time = number_format ( microtime(true),  $decimals = 14, $dec_point = ".", $thousands_sep = "" ));
+            $time = number_format ( microtime(true),  $decimals = 14, $dec_point = ".", $thousands_sep = "" );
 
             /*
              * Make Item array to manipulate and add to result array
