@@ -66,7 +66,7 @@ class QueueController extends Controller {
             }
 
             //Store time to build key
-            $time = Carbon::now();
+            $time = microtime(true);
 
             /*
              * Make Item array to manipulate and add to result array
@@ -114,13 +114,13 @@ class QueueController extends Controller {
             Log::debug("************************* Adding New Item to Queue *************************\n"
                 . print_r($newItem, true));
             //Push an Item onto Redis, delivery_logs table, and built up response
-            Redis::set($time->timestamp . $time->micro, json_encode($newItem));
+            Redis::set($time, json_encode($newItem));
             array_push($added,$newItem );
 
 
 
             $logItem = DeliveryLog::create([
-                'original_redis_key'=> $time->timestamp . $time->micro,
+                'original_redis_key'=> $time,
                 'delivery_method'=> $newItem['method'],
                 'delivery_location'=> $newItem['location']
             ]);
