@@ -113,8 +113,11 @@ class QueueController extends Controller {
 
             Log::debug("************************* Adding New Item to Queue *************************\n"
                 . print_r($newItem, true));
+
+            $newItem['original_request_time'] = $time;
+
             //Push an Item onto Redis, delivery_logs table, and built up response
-            Redis::set($time, json_encode($newItem));
+            Redis::rpush("queue:requests", json_encode($newItem));
             array_push($added,$newItem );
 
 
