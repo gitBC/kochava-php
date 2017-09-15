@@ -41,9 +41,6 @@ class QueueController extends Controller {
             'endpoint.method' => ['required', Rule::in('GET', 'POST')],
             'endpoint.url' => 'required',
             'data' => 'required|array',
-            'data.*.mascot' => 'required',
-            'data.*.location' => 'required|url',
-
         ]);
 
         /*
@@ -79,16 +76,30 @@ class QueueController extends Controller {
             /*
              * Loop over the data keys to build callback url
              *
-             * We will add any additional subkeys or subIDs to the end of the request URL for customer data tracking
+             * This works in two ways. We can either replace a key in the endpoint url or we can append
+             * additional key value pairs to the end of the string if they dont appear in the as keys for
+             * replacement in the endpoint url
+             *
+             * We will add any additional subkeys or subIDs to the end of the request URL for additional
+             * customer data tracking
+             *
+             * Additionally, you can define default values for either key pair in the .env file
              */
             foreach ($item as $key => $value){
+
+
+                if ($value === "") {
+                    $value = getenv("DEFAULT_KEY_" . strtoupper($key));
+                }
 
                 if (strpos($newItem['location'], '{'.$key.'}') > -1){
                     if (getenv("APP_DEBUG")) {
                         Log::debug("************************* Replacing An Item Value in Queue *************************\n"
                         . "Replacing {" . $key . "} with " .$value );
                     }
+
                     $newItem['location'] = str_replace('{'.$key.'}', urlencode($value), $newItem['location']);
+
                 } else {
 
                     if (getenv("APP_DEBUG")) {
@@ -98,15 +109,15 @@ class QueueController extends Controller {
                     }
 
                     $newItem['location'] .= '&'. urlencode($key) .'='. urlencode($value);
+
                 }
 
             }
 
 
-            //TODO: Bar isnt the only item which could have been in the request. We need to remove any empty replace value
-            //Remove {bar} if it doesnt exist in array keys
-            if (strpos($newItem['location'], '{bar}') > -1){
-                $newItem['location'] = preg_replace("/\{bar\}/",'', $newItem['location']);
+            //Remove any replacements if it doesnt exist in array keys
+            if (preg_match("{.*?}", $newItem['location']) === 1){
+                $newItem['location'] = preg_replace("/\{.*?\}/",'', $newItem['location']);
             }
 
 
@@ -137,7 +148,7 @@ class QueueController extends Controller {
         /*
          * Send back the results we added to redis
          */
-        return json_encode($added);
+        return response()->json($added);
     }
 
 }
