@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 
 use App\DeliveryLog;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DeliveryLogController extends Controller {
@@ -31,14 +30,9 @@ class DeliveryLogController extends Controller {
 
         $record->delivery_attempts = $request->input('delivery_attempts');
         $record->response_body = utf8_decode($request->input('response_body'));
-        $record->response_time_microseconds = $request->input('response_time');
         $record->response_code = $request->input('response_code');
-
-
-        $initial_time = $record->original_redis_key;
-
-        $time = number_format(microtime(true), $decimals = 6, $dec_point = ".", $thousands_sep = "");
-        $record->delivery_time_microseconds = $request->input('delivery_time');
+        $record->response_time_microseconds = $request->input('response_time_delta');
+        $record->delivery_time_microseconds = $request->input('delivery_time_delta');
         \Log::debug("Time to deliver = " . $record->delivery_time_microseconds . " seconds");
 
         $record->save();
