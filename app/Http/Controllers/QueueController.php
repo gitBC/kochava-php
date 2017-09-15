@@ -127,22 +127,36 @@ class QueueController extends Controller {
 
             $newItem['original_request_time'] = $time;
 
-            //Push an Item onto Redis, delivery_logs table, and built up response
-            Redis::rpush("queue:requests", json_encode($newItem));
-            array_push($added,$newItem );
-
-
-
-            $logItem = DeliveryLog::create([
-                'original_redis_key'=> $time,
-                'delivery_method'=> $newItem['method'],
-                'delivery_location'=> $newItem['location']
-            ]);
-
-            Log::debug("************************* Adding Delivery Log Item*************************\n"
-                . print_r($logItem->getAttributes(), true) );
+            //Push an Item onto an array so we can create Redis entries, delivery_logs table, and build up response
+            array_push($added,$newItem);
 
         }
+
+        //Insert each item into the delivery log table, give me back an array I can use later
+        //Sadly, if we want to retain Model events, we have to make a call to the DB for each insert.
+        //although its technically possible with the query builder, this will retain 100% functionality
+        //at the expense of performance. This will however, allow us to retain an event driven system.
+        $logItems = collect($added)->each( function ($item){
+                return DeliveryLog::create([
+                    'original_redis_key' => $item['original_request_time'],
+                    'delivery_method'=> $item['method'],
+                    'delivery_location'=> $item['location']
+                ]);
+            })->map(function($item){
+                    return json_encode($item);
+            });
+
+        Log::debug("************************* Adding Delivery Log Item*************************\n"
+            . print_r($logItems, true) );
+
+
+        //call the rpush method only once now and add all items simultaneously.
+        call_user_func_array(
+            [Redis::class, 'rpush'],
+            array_merge(
+                ["queue:requests"], $logItems->toArray()
+            )
+        );
 
 
         /*
