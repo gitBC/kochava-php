@@ -19,10 +19,13 @@ class CreateDeliveryLogTable extends Migration {
             $table->string('delivery_method');
             $table->text('delivery_location');
             $table->smallInteger('delivery_attempts');
-            $table->double('delivery_time_microseconds', 16, 6);
             $table->text('response_body');
             $table->smallInteger('response_code');
+            $table->double('delivery_time_microseconds', 16, 6);
             $table->double('response_time_microseconds', 16, 6);
+            $table->double('delivery_datetime', 16, 6);
+            $table->double('response_datetime', 16, 6);
+
             $table->timestamps();
         });
     }

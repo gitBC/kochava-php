@@ -33,6 +33,8 @@ class DeliveryLogController extends Controller {
         $record->response_code = $request->input('response_code');
         $record->response_time_microseconds = $request->input('response_time_delta');
         $record->delivery_time_microseconds = $request->input('delivery_time_delta');
+        $record->response_datetime = $request->input('response_datetime');
+        $record->delivery_datetime = $request->input('delivery_datetime');
         \Log::debug("Time to deliver = " . $record->delivery_time_microseconds . " seconds");
 
         $record->save();
