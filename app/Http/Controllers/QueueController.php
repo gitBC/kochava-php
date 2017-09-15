@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 
 
 use App\DeliveryLog;
-use App\Jobs\QueueJob;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\Rule;
@@ -15,20 +13,22 @@ use function PHPSTORM_META\type;
 
 class QueueController extends Controller {
 
-
     /**
      * QueueController constructor.
      */
-    function __construct () {
+    function __construct()
+    {
 
     }
 
     /**
      * @param Request $request
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
 
-        if (getenv("APP_DEBUG")) {
+        if (getenv("APP_DEBUG"))
+        {
             Log::debug("************************* New Request to deliver *************************\n" . $request);
         }
 
@@ -37,10 +37,10 @@ class QueueController extends Controller {
          * Validate the request
          */
         $this->validate($request, [
-            'endpoint' => 'required',
+            'endpoint'        => 'required',
             'endpoint.method' => ['required', Rule::in('GET', 'POST')],
-            'endpoint.url' => 'required',
-            'data' => 'required|array',
+            'endpoint.url'    => 'required',
+            'data'            => 'required|array',
         ]);
 
         /*
@@ -56,20 +56,23 @@ class QueueController extends Controller {
         /*
          * loop over our data object
          */
-        foreach ( $r['data'] as $item){
+        foreach ($r['data'] as $item)
+        {
 
-            if (getenv("APP_DEBUG")) {
-                Log::debug("************************* Prepping New Item for Queue *************************\n" . print_r($item, true));
+            if (getenv("APP_DEBUG"))
+            {
+                Log::debug("************************* Prepping New Item for Queue *************************\n" . print_r($item,
+                        true));
             }
 
             //Store time to build key
-            $time = number_format ( microtime(true),  $decimals = 6, $dec_point = ".", $thousands_sep = "" );
+            $time = number_format(microtime(true), $decimals = 6, $dec_point = ".", $thousands_sep = "");
 
             /*
              * Make Item array to manipulate and add to result array
              */
             $newItem = [
-                'method' => $r['endpoint']['method'],
+                'method'   => $r['endpoint']['method'],
                 'location' => $r['endpoint']['url']
             ];
 
@@ -85,30 +88,36 @@ class QueueController extends Controller {
              *
              * Additionally, you can define default values for either key pair in the .env file
              */
-            foreach ($item as $key => $value){
+            foreach ($item as $key => $value)
+            {
 
 
-                if ($value === "") {
+                if ($value === "")
+                {
                     $value = getenv("DEFAULT_KEY_" . strtoupper($key));
                 }
 
-                if (strpos($newItem['location'], '{'.$key.'}') > -1){
-                    if (getenv("APP_DEBUG")) {
+                if (strpos($newItem['location'], '{' . $key . '}') > - 1)
+                {
+                    if (getenv("APP_DEBUG"))
+                    {
                         Log::debug("************************* Replacing An Item Value in Queue *************************\n"
-                        . "Replacing {" . $key . "} with " .$value );
+                            . "Replacing {" . $key . "} with " . $value);
                     }
 
-                    $newItem['location'] = str_replace('{'.$key.'}', urlencode($value), $newItem['location']);
+                    $newItem['location'] = str_replace('{' . $key . '}', urlencode($value), $newItem['location']);
 
-                } else {
+                } else
+                {
 
-                    if (getenv("APP_DEBUG")) {
+                    if (getenv("APP_DEBUG"))
+                    {
 
                         Log::debug("************************* Adding SubKey in Queue *************************\n"
-                            . "Adding " . $key . "=" .$value );
+                            . "Adding " . $key . "=" . $value);
                     }
 
-                    $newItem['location'] .= '&'. urlencode($key) .'='. urlencode($value);
+                    $newItem['location'] .= '&' . urlencode($key) . '=' . urlencode($value);
 
                 }
 
@@ -116,10 +125,10 @@ class QueueController extends Controller {
 
 
             //Remove any replacements if it doesnt exist in array keys
-            if (preg_match("{.*?}", $newItem['location']) === 1){
-                $newItem['location'] = preg_replace("/\{.*?\}/",'', $newItem['location']);
+            if (preg_match("{.*?}", $newItem['location']) === 1)
+            {
+                $newItem['location'] = preg_replace("/\{.*?\}/", '', $newItem['location']);
             }
-
 
 
             Log::debug("************************* Adding New Item to Queue *************************\n"
@@ -128,7 +137,7 @@ class QueueController extends Controller {
             $newItem['original_request_time'] = $time;
 
             //Push an Item onto an array so we can create Redis entries, delivery_logs table, and build up response
-            array_push($added,$newItem);
+            array_push($added, $newItem);
 
         }
 
@@ -136,18 +145,18 @@ class QueueController extends Controller {
         //Sadly, if we want to retain Model events, we have to make a call to the DB for each insert.
         //although its technically possible with the query builder, this will retain 100% functionality
         //at the expense of performance. This will however, allow us to retain an event driven system.
-        $logItems = collect($added)->each( function ($item){
-                return DeliveryLog::create([
-                    'original_redis_key' => $item['original_request_time'],
-                    'delivery_method'=> $item['method'],
-                    'delivery_location'=> $item['location']
-                ]);
-            })->map(function($item){
-                    return json_encode($item);
-            });
+        $logItems = collect($added)->each(function ($item) {
+            return DeliveryLog::create([
+                'original_redis_key' => $item['original_request_time'],
+                'delivery_method'    => $item['method'],
+                'delivery_location'  => $item['location']
+            ]);
+        })->map(function ($item) {
+            return json_encode($item);
+        });
 
         Log::debug("************************* Adding Delivery Log Item*************************\n"
-            . print_r($logItems, true) );
+            . print_r($logItems, true));
 
 
         //call the rpush method only once now and add all items simultaneously.
@@ -162,6 +171,7 @@ class QueueController extends Controller {
         /*
          * Send back the results we added to redis
          */
+
         return response()->json($added);
     }
 

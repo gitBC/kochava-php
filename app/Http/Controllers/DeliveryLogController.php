@@ -7,8 +7,8 @@ use App\DeliveryLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-class DeliveryLogController extends Controller
-{
+class DeliveryLogController extends Controller {
+
     /**
      * Create a new controller instance.
      *
@@ -24,7 +24,8 @@ class DeliveryLogController extends Controller
      *
      * @param Request $request
      */
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
 
         $record = DeliveryLog::where('original_redis_key', $request->input('original_redis_key'))->firstOrFail();
 
@@ -36,9 +37,9 @@ class DeliveryLogController extends Controller
 
         $initial_time = $record->original_redis_key;
 
-        $time = number_format ( microtime(true),  $decimals = 6, $dec_point = ".", $thousands_sep = "" );
+        $time = number_format(microtime(true), $decimals = 6, $dec_point = ".", $thousands_sep = "");
         $record->delivery_time_microseconds = $request->input('delivery_time');
-        \Log::debug("Time to deliver = " . $record->delivery_time_microseconds ." seconds");
+        \Log::debug("Time to deliver = " . $record->delivery_time_microseconds . " seconds");
 
         $record->save();
     }
