@@ -16,7 +16,7 @@ class CreateDeliveryLogTable extends Migration {
         Schema::create('delivery_logs', function (Blueprint $table) {
             $table->increments('id');
             $table->string('original_redis_key');
-            $table->tinyInteger('is_delivered')->nullable();
+            $table->boolean('is_delivered')->default(0);
             $table->string('delivery_method');
             $table->text('delivery_location');
             $table->smallInteger('delivery_attempts');

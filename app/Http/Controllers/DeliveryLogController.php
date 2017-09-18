@@ -28,6 +28,7 @@ class DeliveryLogController extends Controller {
 
         $record = DeliveryLog::where('original_redis_key', $request->input('original_redis_key'))->firstOrFail();
 
+        $record->is_delivered = 1;
         $record->delivery_attempts = $request->input('delivery_attempts');
         $record->response_body = utf8_decode($request->input('response_body'));
         $record->response_code = $request->input('response_code');
