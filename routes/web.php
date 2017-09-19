@@ -24,6 +24,10 @@ $app->post('/ingest', 'QueueController@store');
 $app->post('/digest', "DeliveryLogController@store");
 
 
+$app->group(['namespace' => '\Rap2hpoutre\LaravelLogViewer'], function() use ($app) {
+    $app->get('logs', 'LogViewerController@index');
+});
+
 $app->get('/test', function () {
 
     return "<html><head></head><body class=\"hello\">test it</body></html>";

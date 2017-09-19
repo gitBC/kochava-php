@@ -30,5 +30,11 @@ class AppServiceProvider extends ServiceProvider {
          */
 
         $this->app->register(\Illuminate\Redis\RedisServiceProvider::class);
+
+        /*
+         * Register Laravel Log Viewer
+         */
+        $this->app->register(\Rap2hpoutre\LaravelLogViewer\LaravelLogViewerServiceProvider::class);
+
     }
 }
