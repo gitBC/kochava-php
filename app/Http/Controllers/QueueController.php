@@ -27,11 +27,7 @@ class QueueController extends Controller {
     public function store(Request $request)
     {
 
-        if (getenv("APP_DEBUG"))
-        {
-            Log::debug("************************* New Request to deliver *************************\n" . $request);
-        }
-
+        $this->DebugLog("New Request to deliver", $request);
 
         /*
          * Validate the request
@@ -59,11 +55,7 @@ class QueueController extends Controller {
         foreach ($r['data'] as $item)
         {
 
-            if (getenv("APP_DEBUG"))
-            {
-                Log::debug("************************* Prepping New Item for Queue *************************\n" . print_r($item,
-                        true));
-            }
+            $this->DebugLog("Prepping New Item for Queue", print_r($item, true));
 
             //Store time to build key
             $time = number_format(microtime(true), $decimals = 6, $dec_point = ".", $thousands_sep = "");
@@ -99,23 +91,15 @@ class QueueController extends Controller {
 
                 if (strpos($newItem['location'], '{' . $key . '}') > - 1)
                 {
-                    if (getenv("APP_DEBUG"))
-                    {
-                        Log::debug("************************* Replacing An Item Value in Queue *************************\n"
-                            . "Replacing {" . $key . "} with " . $value);
-                    }
+
+                    $this->DebugLog("Replacing An Item Value in Queue", "Replacing {" . $key . "} with " . $value);
 
                     $newItem['location'] = str_replace('{' . $key . '}', urlencode($value), $newItem['location']);
 
                 } else
                 {
 
-                    if (getenv("APP_DEBUG"))
-                    {
-
-                        Log::debug("************************* Adding SubKey in Queue *************************\n"
-                            . "Adding " . $key . "=" . $value);
-                    }
+                    $this->DebugLog("Adding SubKey in Queue", "Adding " . $key . "=" . $value);
 
                     $newItem['location'] .= '&' . urlencode($key) . '=' . urlencode($value);
 
@@ -155,6 +139,7 @@ class QueueController extends Controller {
             return json_encode($item);
         });
 
+
         Log::debug("************************* Adding Delivery Log Item*************************\n"
             . print_r($logItems, true));
 
@@ -173,6 +158,19 @@ class QueueController extends Controller {
          */
 
         return response()->json($added);
+    }
+
+    /**
+     * Adds a debug message to the logs with the specified title when the app is in debug mode
+     * @param $message
+     */
+    protected function DebugLog($title, $message)
+    {
+        if (getenv("APP_DEBUG"))
+        {
+
+            Log::debug("************************* ". $title ." *************************\n" . $message);
+        }
     }
 
 }
